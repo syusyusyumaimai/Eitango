@@ -13,6 +13,8 @@ const categoryButtons = document.querySelectorAll('.category-btn');
 const levelButtons = document.querySelectorAll('.level-btn'); // 「熟語」も含む
 const sublevelButtons = levelContainer.querySelectorAll('.level-btn'); // 動詞・名詞・形副ボタン
 const backButton = document.getElementById('back-btn');
+const modeBtnEnJp = document.getElementById('mode-en-jp');//英語日本語変換
+const modeBtnJpEn = document.getElementById('mode-jp-en');//上記同様
 
 // ★ カウンター用のHTML要素を取得
 const questionNumberEl = document.getElementById('question-number');
@@ -26,6 +28,7 @@ let allWords = []; // CSVから読み込んだすべての単語
 let questionNumber = 0; // 現在何問目か
 let correctCount = 0;  // 現在の正解数
 let currentLevelWords = []; // ★ 選択したレベルの単語リスト
+let quizDirection = 'en_to_jp';
 
 // ======================================
 // ★ ステップ1：CSVを読み込む非同期関数
@@ -51,6 +54,8 @@ async function loadWordsFromCSV() {
         categoryButtons.forEach(button => { // ★ この3行を追加
     button.disabled = false;
 });
+        modeBtnEnJp.disabled = false; // 
+        modeBtnJpEn.disabled = false; // ★ 追加
 
      } catch (error) {
      console.error('CSVの読み込みに失敗しました:', error);
@@ -89,21 +94,21 @@ function parseCSV(text) {
 }
 
 // ======================================
-// ★ メインのクイズ作成・表示関数 (★ 修正)
+// ★ メインのクイズ作成・表示関数 
 // ======================================
 function displayQuiz() {
      resultElement.textContent = ""; // 結果をリセット
 
      // ★ 2. 残りの問題があるかチェック
      if (remainingQuestions.length === 0) {
-         questionElement.textContent = "クイズ終了！";
-         choicesElement.innerHTML = ""; // 選択肢を空にする
+         questionElement.textContent = "クイズ終了！";
+         choicesElement.innerHTML = ""; // 選択肢を空にする
         
         // ★ 修正： 'words.length' ではなく 'currentLevelWords.length' を使う
-         resultElement.textContent = `全 ${currentLevelWords.length} 問中、${correctCount} 問正解！`;
+         resultElement.textContent = `全 ${currentLevelWords.length} 問中、${correctCount} 問正解！`;
     
-         homeButton.classList.remove('hidden'); // ホームボタンを表示
-         return; // 関数を終了
+         homeButton.classList.remove('hidden'); // ホームボタンを表示
+         return; // 関数を終了
      }
 
     // ★ 3. 問題番号を更新
@@ -121,31 +126,49 @@ function displayQuiz() {
 
      // ★ 6. ダミーの選択肢を3つ作る (★ 修正)
      const dummies = [];
-     while (dummies.length < 3) {
-         // ★ 修正： 'words' ではなく 'allWords' (全単語) から選ぶ
-         const dummy = allWords[Math.floor(Math.random() * allWords.length)];
-    
-         // 正解と被らず、ダミーリストにもまだ無ければ追加
-        // ★ 修正：ダミーの比較対象は 'dummy.meaning'
-         if (dummy.word !== correctAnswer.word && !dummies.includes(dummy.meaning)) {
-             dummies.push(dummy.meaning);
-         }
-     }
+     let correctChoice = "";
+
+     if (quizDirection === 'en_to_jp') {
+        // 【英→日】モード（従来）
+        questionElement.textContent = correctAnswer.word; // 問題は「英単語」
+        correctChoice = correctAnswer.meaning; // 正解は「日本語」
+        while (dummies.length < 3) {
+            // ★ 修正： 'words' ではなく 'allWords' (全単語) から選ぶ
+            const dummy = allWords[Math.floor(Math.random() * allWords.length)];
+        
+            // 正解と被らず、ダミーリストにもまだ無ければ追加
+            // ★ 修正：ダミーの比較対象は 'dummy.meaning'
+            if (dummy.word !== correctAnswer.word && !dummies.includes(dummy.meaning)) {
+                dummies.push(dummy.meaning);
+            }
+        }
+    } else {// 【日→英】モード（新規）
+        questionElement.textContent = correctAnswer.meaning; // 問題は「日本語」
+        correctChoice = correctAnswer.word; // 正解は「英単語」
+
+        while (dummies.length < 3) {
+            const dummy = allWords[Math.floor(Math.random() * allWords.length)];
+            // ダミーの「英単語」を追加
+            if (dummy.word !== correctAnswer.word && !dummies.includes(dummy.word)) {
+                dummies.push(dummy.word);
+            }
+        }
+    }
 
      // ★ 7. 選択肢をシャッフルする (正解 + ダミー3つ)
-     const choices = [correctAnswer.meaning, ...dummies];
+     const choices = [correctChoice, ...dummies];
      for (let i = choices.length - 1; i > 0; i--) {
-         const j = Math.floor(Math.random() * (i + 1));
-         [choices[i], choices[j]] = [choices[j], choices[i]];
+         const j = Math.floor(Math.random() * (i + 1));
+         [choices[i], choices[j]] = [choices[j], choices[i]];
      }
 
  // ★ 8. 画面にボタンとして表示する
      choicesElement.innerHTML = ""; // 前回の選択肢をクリア
      choices.forEach(choice => {
-         const button = document.createElement('button');
-         button.textContent = choice;
-         button.onclick = () => checkAnswer(choice); // クリックされたら答え合わせ
-         choicesElement.appendChild(button);
+         const button = document.createElement('button');
+         button.textContent = choice;
+         button.onclick = () => checkAnswer(choice); // クリックされたら答え合わせ
+         choicesElement.appendChild(button);
      });
 }
 
@@ -154,19 +177,40 @@ function displayQuiz() {
 // ======================================
 function checkAnswer(selectedChoice) {
     // 答え合わせ中はボタンを無効化する（連打防止）
-     const buttons = choicesElement.querySelectorAll('button');
-     buttons.forEach(button => button.disabled = true);
+    const buttons = choicesElement.querySelectorAll('button');
+    buttons.forEach(button => button.disabled = true);
 
-     if (selectedChoice === currentQuestion.meaning) {
-         resultElement.textContent = "正解！ ⭕️";
-         resultElement.className = "correct";
-         correctCount++;
-         correctCountEl.textContent = correctCount;
-         setTimeout(displayQuiz, 1000)
-     } else {
-         resultElement.textContent = `不正解... ❌ 正解は「${currentQuestion.meaning}」`;
-         resultElement.className = "incorrect";
-         setTimeout(displayQuiz, 2500)
+    let correctAnswerText = "";
+    if (quizDirection === 'en_to_jp') {
+        correctAnswerText = currentQuestion.word; // 正解は「日本語」
+    } else {
+        correctAnswerText = currentQuestion.meaning; // 正解は「英単語」
+    }
+
+
+     if (quizDirection === 'en_to_jp' && selectedChoice === currentQuestion.meaning) {
+         resultElement.textContent = "正解！ ⭕️";
+         resultElement.className = "correct";
+         correctCount++;
+         correctCountEl.textContent = correctCount;
+         setTimeout(displayQuiz, 1000)
+     }
+     else if (quizDirection === 'jp_to_en' && selectedChoice === currentQuestion.word) {
+         resultElement.textContent = "正解！ ⭕️";
+         resultElement.className = "correct";
+         correctCount++;
+         correctCountEl.textContent = correctCount;
+         setTimeout(displayQuiz, 1000)
+     }
+     else if (quizDirection === 'en_to_jp') {
+         resultElement.textContent = `不正解... ❌ 正解は「${currentQuestion.meaning}」`;
+         resultElement.className = "incorrect";
+         setTimeout(displayQuiz, 2500)
+     }
+     else {
+        resultElement.textContent = `不正解... ❌ 正解は「${currentQuestion.word}」`;
+         resultElement.className = "incorrect";
+         setTimeout(displayQuiz, 2500)
      }
 }
 
@@ -252,10 +296,24 @@ homeButton.addEventListener('click', () => {
     categoryContainer.classList.remove('hidden'); 
 });
 
+modeBtnEnJp.addEventListener('click', () => {
+    quizDirection = 'en_to_jp';
+    modeBtnEnJp.classList.add('active'); // 自分をアクティブに
+    modeBtnJpEn.classList.remove('active'); // 反対側を非アクティブに
+});
+
+modeBtnJpEn.addEventListener('click', () => {
+    quizDirection = 'jp_to_en';
+    modeBtnJpEn.classList.add('active'); // 自分をアクティブに
+    modeBtnEnJp.classList.remove('active'); // 反対側を非アクティブに
+});
+
 // --- ページ読み込み時の最初の処理 ---
 
 // ★ レベルボタンを一旦無効化
 levelButtons.forEach(button => button.disabled = true);
 categoryButtons.forEach(button => button.disabled = true);
+modeBtnEnJp.disabled = true; // ★ 追加
+modeBtnJpEn.disabled = true; // ★ 追加
 // CSVの読み込みを自動で開始
 loadWordsFromCSV();

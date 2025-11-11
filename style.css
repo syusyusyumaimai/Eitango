@@ -167,6 +167,44 @@ body {
     text-align: center;
 }
 
+/* --- ★ モード選択ボタンのスタイル (新規追加) --- */
+#mode-selection {
+    display: flex; /* 2つのボタンを横並びにする */
+    margin-bottom: 25px;
+    border: 1px solid #007bff; /* 枠線（青） */
+    border-radius: 8px;
+    overflow: hidden; /* 角丸を効かせるため */
+}
+
+.mode-btn {
+    flex: 1; /* 2つのボタンが均等に幅を取る */
+    padding: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    
+    background-color: #fff; /* 通常（非選択）の色 */
+    color: #007bff; /* 通常（非選択）の文字色 */
+    
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.mode-btn:hover {
+    background-color: #f4f4f9; /* 少し色をつける */
+}
+
+/* ★ 選択中のスタイル (activeクラス) */
+.mode-btn.active {
+    background-color: #007bff; /* 選択中の背景色（青） */
+    color: #fff; /* 選択中の文字色（白） */
+}
+
+/* ★ ボタン間の区切り線 (2つ目以降のボタンの左側) */
+.mode-btn + .mode-btn {
+    border-left: 1px solid #007bff;
+}
+
 /* --- スコアカウンター --- */
 #score-counter {
     text-align: right; /* 右寄せ */
