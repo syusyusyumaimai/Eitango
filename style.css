@@ -1,0 +1,250 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* ★ 汎用クラス（両方の画面で使う） */
+.container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    width: 320px;
+    text-align: center;
+}
+
+/* ★ 非表示にするためのクラス */
+.hidden {
+    display: none;
+}
+
+
+/* --- スタート画面のレベル選択 --- */
+#level-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* ボタン間のすき間 */
+    margin-top: 25px;
+}
+
+.level-btn,
+.category-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: #007bff; /* 青 */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    margin-bottom: 15px;
+}
+/* --- カテゴリーボタンの色 --- */
+.category-btn[data-category="A"] { background-color: #007bff; } /* 青 */
+.category-btn[data-category="A"]:hover { background-color: #0056b3; }
+
+.category-btn[data-category="B"] { background-color: #28a745; } /* 緑 */
+.category-btn[data-category="B"]:hover { background-color: #218838; }
+
+.category-btn[data-category="C"] { background-color: #dc3545; } /* 赤 */
+.category-btn[data-category="C"]:hover { background-color: #c82333; }
+
+/* --- 「熟語」ボタンの色 --- */
+.level-btn[data-level="10"] { background-color: #ffc107; } /* 黄 */
+.level-btn[data-level="10"]:hover { background-color: #e0a800; }
+/* (熟語ボタンの文字色は黒の方が見やすいかもしれません) */
+/* .level-btn[data-level="10"] { color: #212529; } */
+
+
+/* --- レベル選択画面のボタン色 (既存) --- */
+/* もし data-level="1" などで指定していた場合、
+   'data-level-base' を使うようにセレクタを書き換えるか、
+   JS側で設定した data-level="1"〜"9" で色指定し直してください。
+*/
+/* 例: data-level-base を使う場合 */
+.level-btn[data-level-base="1"] { background-color: #007bff; } /* 動詞 */
+.level-btn[data-level-base="1"]:hover { background-color: #0056b3; } 
+
+.level-btn[data-level-base="2"] { background-color: #28a745; } /* 名詞 */
+.level-btn[data-level-base="2"]:hover { background-color: #218838; }
+
+.level-btn[data-level-base="3"] { background-color: #dc3545; } /* 形副 */
+.level-btn[data-level-base="3"]:hover { background-color: #c82333; }
+
+.level-btn:active {
+    transform: scale(0.99);
+}
+
+.level-btn[data-level="2"] {
+    background-color: #28a745; /* 緑 */
+}
+.level-btn[data-level="2"]:hover {
+    background-color: #218838;
+}
+.level-btn[data-level="3"] {
+    background-color: #dc3545; /* 赤 */
+}
+.level-btn[data-level="3"]:hover {
+    background-color: #c82333;
+}
+
+/* --- 選択肢ボタンのエリア --- */
+#choices {
+    display: flex;
+    flex-direction: column; /* ボタンを縦に並べる */
+    gap: 10px; /* 各ボタンの間にすき間を 10px あける */
+    margin-top: 20px; /* 問題との間にすき間をあける */
+}
+
+/* --- 選択肢ボタン本体 --- */
+#choices button {
+    width: 100%; /* 横幅いっぱいに広げる */
+    padding: 12px;
+    font-size: 1rem; /* 16px 相当 */
+    
+    color: #333; /* 文字色 */
+    background-color: #fff; /* 背景色（白） */
+    
+    border: 1px solid #ccc; /* 枠線（グレー） */
+    border-radius: 8px; /* 角を丸くする */
+    
+    cursor: pointer; /* マウスを乗せたら指カーソルにする */
+    
+    /* アニメーションを滑らかにする（おまけ） */
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+/* --- ホームに戻るボタン --- */
+#home-btn {
+    width: 85%;
+    padding: 10px;
+    font-size: 1rem;
+    color: #555;
+    background-color: #f4f4f9; /* 目立たない色 */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 25px; /* 結果とのすき間 */
+}
+#home-btn:hover {
+    background-color: #e9e9e9;
+}
+
+/* --- マウスが乗った時のスタイル (ホバー) --- */
+#choices button:hover {
+    background-color: #f4f4f9; /* 背景をうすいグレーに */
+    border-color: #007bff; /* 枠線を青くする */
+}
+
+/* --- クリックした瞬間のスタイル (アクティブ) --- */
+#choices button:active {
+    transform: scale(0.99); /* ほんの少し(99%)小さくする */
+    background-color: #e9e9e9; /* 少し濃いグレー */
+}
+
+/* --- 答え合わせで無効化された時のスタイル --- */
+#choices button:disabled {
+    background-color: #eee;
+    color: #aaa;
+    cursor: not-allowed; /* 禁止カーソル */
+    border-color: #ddd;
+}
+
+.container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    width: 320px;
+    text-align: center;
+}
+
+/* --- スコアカウンター --- */
+#score-counter {
+    text-align: right; /* 右寄せ */
+    font-size: 0.9rem; /* 文字を少し小さく */
+    color: #555;       /* 文字色を少し薄く */
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee; /* 薄い区切り線 */
+    padding-bottom: 8px;
+    text-align: center;
+}
+#score-counter span {
+    font-weight: bold; /* 数字部分を太字に */
+    color: #333;
+    /* 数字が見やすいように少し幅を確保 */
+    display: inline-block;
+    min-width: 1.2em; 
+    text-align: center;
+}
+
+#question {
+    font-size: 2.5rem; /* 2.5倍の文字サイズ */
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #0056b3; /* 少し濃い青 */
+    text-align: center;
+}
+
+#answer-input {
+    width: 80%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#check-btn {
+    width: 85%;
+    padding: 10px;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #007bff; /* 青色 */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+#check-btn:hover {
+    background-color: #0056b3;
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* JavaScriptから追加するクラス */
+.correct {
+    color: green;
+}
+
+.incorrect {
+    color: red;
+}
+
+/* --- 「戻る」ボタンのスタイル (新規追加) --- */
+#back-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    color: #555;
+    background-color: #f4f4f9; /* 目立たない色 */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px; /* 上のボタンとのすき間 */
+}
+#back-btn:hover {
+    background-color: #e9e9e9;
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語クイズアプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="category-selection-container" class="container">
+        <h1>英単語クイズ</h1>
+        <p>英検１級の単語の問題が出されます</p>
+        <p>レベルを選択してください</p>
+
+        <button class="category-btn" data-category="A">Level A</button>
+        <button class="category-btn" data-category="B">Level B</button>
+        <button class="category-btn" data-category="C">Level C</button>
+        <button class="level-btn" data-level="10">Level 熟語</button>
+
+    </div>
+
+    <div id="level-selection-container" class="container hidden">
+        <h2 id="level-title"></h2> 
+        <p>問題を選択してください</p>
+        
+        <button class="level-btn" data-level-base="1">動詞</button>
+        <button class="level-btn" data-level-base="2">名詞</button>
+        <button class="level-btn" data-level-base="3">形容詞/副詞</button>
+        
+        <button id="back-btn">レベル選択に戻る</button> 
+    </div>
+
+    </div>
+
+
+    <div id="quiz-container" class="container hidden">
+
+        <div id="score-counter">
+            <span id="question-number">0</span> / <span id="total-questions">0</span> 問目
+            | 
+            正解数: <span id="correct-count">0</span>
+        </div>
+        <div id="question"></div>
+        <div id="choices"></div>        
+        <div id="result"></div>
+
+        <button id="home-btn" class="hidden">ホームに戻る</button>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
