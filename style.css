@@ -34,7 +34,8 @@ body {
 }
 
 .level-btn,
-.category-btn {
+.category-btn,
+.review-btn {
     width: 100%;
     padding: 12px;
     font-size: 1.1rem;
@@ -96,6 +97,16 @@ body {
     background-color: #c82333;
 }
 
+/* --- ★ 苦手復習ボタンのスタイル (新規追加) --- */
+.review-btn {
+    background-color: #fd7e14; /* オレンジ */
+}
+.review-btn:hover {
+    background-color: #e36d0e; /* 濃いオレンジ */
+}
+.review-btn:disabled {
+    opacity: 0.6;
+}
 /* --- 選択肢ボタンのエリア --- */
 #choices {
     display: flex;

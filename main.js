@@ -15,6 +15,7 @@ const sublevelButtons = levelContainer.querySelectorAll('.level-btn'); // 動詞
 const backButton = document.getElementById('back-btn');
 const modeBtnEnJp = document.getElementById('mode-en-jp');//英語日本語変換
 const modeBtnJpEn = document.getElementById('mode-jp-en');//上記同様
+const reviewWeakButton = document.getElementById('review-weak-btn');
 
 // ★ カウンター用のHTML要素を取得
 const questionNumberEl = document.getElementById('question-number');
@@ -29,6 +30,8 @@ let questionNumber = 0; // 現在何問目か
 let correctCount = 0;  // 現在の正解数
 let currentLevelWords = []; // ★ 選択したレベルの単語リスト
 let quizDirection = 'en_to_jp';
+let masterWrongList = []; // 間違えた単語を溜め込むリスト
+let isReviewMode = false; // 「今、復習モード中か？」のフラグ
 
 // ======================================
 // ★ ステップ1：CSVを読み込む非同期関数
@@ -193,6 +196,10 @@ function checkAnswer(selectedChoice) {
          resultElement.className = "correct";
          correctCount++;
          correctCountEl.textContent = correctCount;
+         if (isReviewMode) {
+            // wordが一致するものをリストから消す
+            masterWrongList = masterWrongList.filter(w => w.word !== currentQuestion.word);
+        }
          setTimeout(displayQuiz, 1000)
      }
      else if (quizDirection === 'jp_to_en' && selectedChoice === currentQuestion.word) {
@@ -200,22 +207,65 @@ function checkAnswer(selectedChoice) {
          resultElement.className = "correct";
          correctCount++;
          correctCountEl.textContent = correctCount;
+
+         if (isReviewMode) {
+            // wordが一致するものをリストから消す
+            masterWrongList = masterWrongList.filter(w => w.word !== currentQuestion.word);
+        }
          setTimeout(displayQuiz, 1000)
      }
      else if (quizDirection === 'en_to_jp') {
          resultElement.textContent = `不正解... ❌ 正解は「${currentQuestion.meaning}」`;
          resultElement.className = "incorrect";
+
+         const alreadyExists = masterWrongList.some(w => w.word === currentQuestion.word);
+        if (!alreadyExists) {
+            masterWrongList.push(currentQuestion);
+        }
          setTimeout(displayQuiz, 2500)
      }
      else {
         resultElement.textContent = `不正解... ❌ 正解は「${currentQuestion.word}」`;
          resultElement.className = "incorrect";
+
+         const alreadyExists = masterWrongList.some(w => w.word === currentQuestion.word);
+        if (!alreadyExists) {
+            masterWrongList.push(currentQuestion);
+        }
          setTimeout(displayQuiz, 2500)
      }
+
+     // ★ 復習ボタンがクリックされた時の処理
+reviewWeakButton.addEventListener('click', () => {
+    if (masterWrongList.length === 0) {
+        return; // 念のため
+    }
+
+    // 1. 復習モードをONにする
+    isReviewMode = true;
+    
+    // 2. 画面切り替え
+    categoryContainer.classList.add('hidden');
+    quizContainer.classList.remove('hidden');
+
+    // 3. カウンターリセット
+    questionNumber = 0;
+    correctCount = 0;
+    questionNumberEl.textContent = "0";
+    correctCountEl.textContent = "0";
+    
+    // ★ 問題リストを「苦手リスト」にする
+    currentLevelWords = [...masterWrongList]; // コピーを使う
+    totalQuestionsEl.textContent = currentLevelWords.length;
+    remainingQuestions = [...currentLevelWords];
+
+    // 4. クイズ開始
+    displayQuiz();
+});
 }
 
 // ======================================
-// ★ 実行開始処理 (大幅変更)
+// ★ 実行開始処理 
 // ======================================
 // --- 1. カテゴリーボタン（A, B, C）が押された時の処理 ---
 categoryButtons.forEach(button => {
@@ -250,7 +300,8 @@ levelButtons.forEach(button => {
         
         // 1. 選択したレベルの単語だけを絞り込む
         currentLevelWords = allWords.filter(word => word.level === selectedLevel);
-        
+        isReviewMode = false;
+
         if (currentLevelWords.length === 0) {
             alert(`レベル${selectedLevel} の単語がCSVに見つかりません。`);
             return;
@@ -294,7 +345,19 @@ homeButton.addEventListener('click', () => {
     
     // ★ 戻る先を「カテゴリー選択」画面にする
     categoryContainer.classList.remove('hidden'); 
+
+    const count = masterWrongList.length;
+    reviewWeakButton.textContent = `苦手な単語を復習 (${count})`;
+    
+    if (count > 0) {
+        reviewWeakButton.disabled = false; // 押せるようにする
+        reviewWeakButton.style.opacity = "1"; // (見た目) はっきり表示
+    } else {
+        reviewWeakButton.disabled = true;  // 押せないようにする
+        reviewWeakButton.style.opacity = "0.6"; // (見た目) 薄くする
+    }
 });
+
 
 modeBtnEnJp.addEventListener('click', () => {
     quizDirection = 'en_to_jp';
