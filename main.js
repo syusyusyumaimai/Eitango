@@ -18,6 +18,7 @@ const backButton = document.getElementById('back-btn');
 const modeBtnEnJp = document.getElementById('mode-en-jp'); // 英語 → 日本語
 const modeBtnJpEn = document.getElementById('mode-jp-en'); // 日本語 → 英語
 const reviewWeakButton = document.getElementById('review-weak-btn');
+const countButtons = document.querySelectorAll('.count-btn'); // 出題数の選択ボタン
 
 // カウンター用の要素
 const questionNumberEl = document.getElementById('question-number');
@@ -26,9 +27,11 @@ const correctCountEl = document.getElementById('correct-count');
 
 // --- 定数 ---
 const STORAGE_KEY = 'eitango.wrongWords'; // 間違えた単語を保存するキー
+const COUNT_STORAGE_KEY = 'eitango.questionCount'; // 出題数の設定を保存するキー
 const CATEGORY_OFFSET = { A: 0, B: 3, C: 6 }; // A: 1〜3, B: 4〜6, C: 7〜9
 const NEXT_DELAY_CORRECT = 1000;   // 正解のとき次の問題までの待ち時間(ms)
 const NEXT_DELAY_INCORRECT = 2500; // 不正解のとき次の問題までの待ち時間(ms)
+const NEXT_DELAY_WITH_SYNONYMS = 2500; // 正解でも類語があるときは読めるように長めに待つ(ms)
 
 // --- グローバル変数 ---
 let allWords = [];            // CSVから読み込んだすべての単語
@@ -38,6 +41,7 @@ let currentQuestion = {};     // 現在の問題
 let questionNumber = 0;       // 現在何問目か
 let correctCount = 0;         // 現在の正解数
 let quizDirection = 'en_to_jp';
+let questionCount = 'all';    // 1回の出題数（'10', '20', 'all'）
 let masterWrongList = [];     // 間違えた単語を溜め込むリスト
 let isReviewMode = false;     // 今、復習モード中か
 let nextQuestionTimer = null; // 次の問題を表示するタイマー（中断時に止める）
@@ -70,7 +74,7 @@ async function loadWordsFromCSV() {
     }
 }
 
-// CSVテキストを解析して { word, meaning, level } の配列にする
+// CSVテキストを解析して { word, meaning, level, synonyms } の配列にする
 function parseCSV(text) {
     const lines = text.split('\n').slice(1); // 1行目(ヘッダー)を飛ばす
     const result = [];
@@ -78,14 +82,39 @@ function parseCSV(text) {
     for (const line of lines) {
         if (line.trim() === '') continue; // 空行は無視
 
-        const parts = line.split(',').map(part => part.trim());
+        const parts = splitCSVLine(line).map(part => part.trim());
         if (parts.length < 3) continue; // 3列ないものは弾く
 
-        const [word, meaning, level] = parts;
+        const [word, meaning, level, synonyms = ''] = parts;
         if (!word || !meaning) continue;
-        result.push({ word, meaning, level });
+        result.push({ word, meaning, level, synonyms });
     }
     return result;
+}
+
+// CSVの1行を列に分ける（"pardon, overlook" のように "" で囲まれたカンマにも対応）
+function splitCSVLine(line) {
+    const fields = [];
+    let field = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (inQuotes) {
+            if (char === '"' && line[i + 1] === '"') { field += '"'; i++; } // "" は " 1文字
+            else if (char === '"') { inQuotes = false; }
+            else { field += char; }
+        } else if (char === '"') {
+            inQuotes = true;
+        } else if (char === ',') {
+            fields.push(field);
+            field = '';
+        } else {
+            field += char;
+        }
+    }
+    fields.push(field);
+    return fields;
 }
 
 // ======================================
@@ -107,6 +136,31 @@ function saveWrongList() {
     } catch (error) {
         // 保存できない環境（プライベートモードなど）でもクイズは続けられるようにする
     }
+}
+
+// 出題数の設定
+function setQuestionCount(count) {
+    questionCount = count;
+    countButtons.forEach(button => {
+        button.classList.toggle('active', button.dataset.count === count);
+    });
+    try {
+        localStorage.setItem(COUNT_STORAGE_KEY, count);
+    } catch (error) {
+        // 保存できなくても動作は続ける
+    }
+}
+
+function loadQuestionCount() {
+    try {
+        const saved = localStorage.getItem(COUNT_STORAGE_KEY);
+        if ([...countButtons].some(button => button.dataset.count === saved)) {
+            return saved;
+        }
+    } catch (error) {
+        // 読み込めなければ初期値
+    }
+    return 'all';
 }
 
 function updateReviewButton() {
@@ -155,8 +209,10 @@ function showScreen(screen) {
 // ======================================
 function startQuiz(words, reviewMode) {
     isReviewMode = reviewMode;
-    currentLevelWords = [...words];
-    remainingQuestions = [...words];
+    // 設定された出題数だけランダムに選ぶ（「全部」ならすべて）
+    const limit = questionCount === 'all' ? words.length : parseInt(questionCount, 10);
+    currentLevelWords = shuffle([...words]).slice(0, limit);
+    remainingQuestions = [...currentLevelWords];
 
     questionNumber = 0;
     correctCount = 0;
@@ -227,17 +283,25 @@ function displayQuiz() {
     choices.forEach(choice => {
         const button = document.createElement('button');
         button.textContent = choice;
-        button.onclick = () => checkAnswer(choice);
+        button.onclick = () => checkAnswer(choice, button);
         choicesElement.appendChild(button);
     });
 }
 
-function checkAnswer(selectedChoice) {
-    // 答え合わせ中はボタンを無効化する（連打防止）
-    choicesElement.querySelectorAll('button').forEach(button => button.disabled = true);
-
+function checkAnswer(selectedChoice, selectedButton) {
     const correctChoice = quizDirection === 'en_to_jp' ? currentQuestion.meaning : currentQuestion.word;
     const isCorrect = selectedChoice === correctChoice;
+
+    // 答え合わせ中はボタンを無効化し（連打防止）、正解を緑・選んだ不正解を赤にする
+    choicesElement.querySelectorAll('button').forEach(button => {
+        button.disabled = true;
+        if (button.textContent === correctChoice) {
+            button.classList.add('choice-correct');
+        }
+    });
+    if (!isCorrect) {
+        selectedButton.classList.add('choice-wrong');
+    }
 
     if (isCorrect) {
         resultElement.textContent = '正解！ ⭕️';
@@ -259,7 +323,20 @@ function checkAnswer(selectedChoice) {
     }
     saveWrongList();
 
-    nextQuestionTimer = setTimeout(displayQuiz, isCorrect ? NEXT_DELAY_CORRECT : NEXT_DELAY_INCORRECT);
+    // 類語があれば表示する
+    const hasSynonyms = currentQuestion.synonyms !== '';
+    if (hasSynonyms) {
+        const synonymsElement = document.createElement('div');
+        synonymsElement.className = 'synonyms';
+        synonymsElement.textContent = `類語: ${currentQuestion.synonyms}`;
+        resultElement.appendChild(synonymsElement);
+    }
+
+    let delay = NEXT_DELAY_INCORRECT;
+    if (isCorrect) {
+        delay = hasSynonyms ? NEXT_DELAY_WITH_SYNONYMS : NEXT_DELAY_CORRECT;
+    }
+    nextQuestionTimer = setTimeout(displayQuiz, delay);
 }
 
 // ======================================
@@ -330,6 +407,11 @@ function setQuizDirection(direction) {
 modeBtnEnJp.addEventListener('click', () => setQuizDirection('en_to_jp'));
 modeBtnJpEn.addEventListener('click', () => setQuizDirection('jp_to_en'));
 
+// 出題数の切り替え
+countButtons.forEach(button => {
+    button.addEventListener('click', () => setQuestionCount(button.dataset.count));
+});
+
 // ======================================
 // ページ読み込み時の処理
 // ======================================
@@ -339,4 +421,5 @@ categoryButtons.forEach(button => button.disabled = true);
 modeBtnEnJp.disabled = true;
 modeBtnJpEn.disabled = true;
 
+setQuestionCount(loadQuestionCount());
 loadWordsFromCSV();

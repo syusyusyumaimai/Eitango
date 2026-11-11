@@ -91,13 +91,19 @@ body {
 .review-btn { background-color: #fd7e14; } /* オレンジ */
 .review-btn:hover:enabled { background-color: #e36d0e; }
 
-/* --- 出題方向の切り替え --- */
-#mode-selection {
+/* --- 出題方向・出題数の切り替え（横並びのボタン） --- */
+.segmented {
     display: flex; /* 2つのボタンを横並びにする */
     margin-bottom: 25px;
     border: 1px solid #007bff;
     border-radius: 8px;
     overflow: hidden; /* 角丸を効かせるため */
+}
+
+.setting-label {
+    margin: 0 0 6px;
+    font-size: 0.85rem;
+    color: #555;
 }
 
 .mode-btn {
@@ -196,6 +202,20 @@ body {
     border-color: #ddd;
 }
 
+/* 答え合わせ後：正解は緑、選んだ不正解は赤 */
+#choices button.choice-correct:disabled {
+    background-color: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+    font-weight: 600;
+}
+
+#choices button.choice-wrong:disabled {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
 /* --- 結果表示 --- */
 #result {
     margin-top: 20px;
@@ -209,6 +229,14 @@ body {
 
 .incorrect {
     color: red;
+}
+
+/* 類語 */
+.synonyms {
+    margin-top: 8px;
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: #555;
 }
 
 /* --- 「ホームに戻る」「レベル選択に戻る」ボタン --- */

@@ -14,9 +14,16 @@
         <p>英検１級の単語の問題が出されます</p>
         <p>レベルを選択してください</p>
 
-        <div id="mode-selection">
+        <div id="mode-selection" class="segmented">
             <button id="mode-en-jp" class="mode-btn active">英語 → 日本語</button>
             <button id="mode-jp-en" class="mode-btn">日本語 → 英語</button>
+        </div>
+
+        <p class="setting-label">出題数</p>
+        <div id="count-selection" class="segmented">
+            <button class="mode-btn count-btn" data-count="10">10問</button>
+            <button class="mode-btn count-btn" data-count="20">20問</button>
+            <button class="mode-btn count-btn active" data-count="all">全部</button>
         </div>
 
         <button id="review-weak-btn" class="review-btn" disabled>間違えた単語を復習 (0)</button>
