@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: #f4f4f9;
@@ -5,34 +11,28 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh; /* 内容が長いときは縦にスクロールできるように min-height にする */
     margin: 0;
+    padding: 16px;
 }
 
-/* ★ 汎用クラス（両方の画面で使う） */
+/* --- 画面の枠（共通） --- */
 .container {
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     padding: 24px;
-    width: 320px;
+    width: 100%;
+    max-width: 360px; /* スマホでは画面幅に合わせ、PCでは最大360px */
     text-align: center;
 }
 
-/* ★ 非表示にするためのクラス */
+/* --- 非表示にするためのクラス --- */
 .hidden {
     display: none;
 }
 
-
-/* --- スタート画面のレベル選択 --- */
-#level-selection {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* ボタン間のすき間 */
-    margin-top: 25px;
-}
-
+/* --- 大きいボタン（カテゴリー・品詞・熟語・復習） --- */
 .level-btn,
 .category-btn,
 .review-btn {
@@ -48,141 +48,54 @@ body {
     transition: background-color 0.2s, transform 0.1s;
     margin-bottom: 15px;
 }
-/* --- カテゴリーボタンの色 --- */
-.category-btn[data-category="A"] { background-color: #007bff; } /* 青 */
-.category-btn[data-category="A"]:hover { background-color: #0056b3; }
 
-.category-btn[data-category="B"] { background-color: #28a745; } /* 緑 */
-.category-btn[data-category="B"]:hover { background-color: #218838; }
-
-.category-btn[data-category="C"] { background-color: #dc3545; } /* 赤 */
-.category-btn[data-category="C"]:hover { background-color: #c82333; }
-
-/* --- 「熟語」ボタンの色 --- */
-.level-btn[data-level="10"] { background-color: #ffc107; } /* 黄 */
-.level-btn[data-level="10"]:hover { background-color: #e0a800; }
-/* (熟語ボタンの文字色は黒の方が見やすいかもしれません) */
-/* .level-btn[data-level="10"] { color: #212529; } */
-
-
-/* --- レベル選択画面のボタン色 (既存) --- */
-/* もし data-level="1" などで指定していた場合、
-   'data-level-base' を使うようにセレクタを書き換えるか、
-   JS側で設定した data-level="1"〜"9" で色指定し直してください。
-*/
-/* 例: data-level-base を使う場合 */
-.level-btn[data-level-base="1"] { background-color: #007bff; } /* 動詞 */
-.level-btn[data-level-base="1"]:hover { background-color: #0056b3; } 
-
-.level-btn[data-level-base="2"] { background-color: #28a745; } /* 名詞 */
-.level-btn[data-level-base="2"]:hover { background-color: #218838; }
-
-.level-btn[data-level-base="3"] { background-color: #dc3545; } /* 形副 */
-.level-btn[data-level-base="3"]:hover { background-color: #c82333; }
-
-.level-btn:active {
+.level-btn:active,
+.category-btn:active,
+.review-btn:active {
     transform: scale(0.99);
 }
 
-.level-btn[data-level="2"] {
-    background-color: #28a745; /* 緑 */
-}
-.level-btn[data-level="2"]:hover {
-    background-color: #218838;
-}
-.level-btn[data-level="3"] {
-    background-color: #dc3545; /* 赤 */
-}
-.level-btn[data-level="3"]:hover {
-    background-color: #c82333;
-}
-
-/* --- ★ 苦手復習ボタンのスタイル (新規追加) --- */
-.review-btn {
-    background-color: #fd7e14; /* オレンジ */
-}
-.review-btn:hover {
-    background-color: #e36d0e; /* 濃いオレンジ */
-}
+/* 単語が無い・押せないボタン */
+.level-btn:disabled,
+.category-btn:disabled,
 .review-btn:disabled {
-    opacity: 0.6;
-}
-/* --- 選択肢ボタンのエリア --- */
-#choices {
-    display: flex;
-    flex-direction: column; /* ボタンを縦に並べる */
-    gap: 10px; /* 各ボタンの間にすき間を 10px あける */
-    margin-top: 20px; /* 問題との間にすき間をあける */
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
-/* --- 選択肢ボタン本体 --- */
-#choices button {
-    width: 100%; /* 横幅いっぱいに広げる */
-    padding: 12px;
-    font-size: 1rem; /* 16px 相当 */
-    
-    color: #333; /* 文字色 */
-    background-color: #fff; /* 背景色（白） */
-    
-    border: 1px solid #ccc; /* 枠線（グレー） */
-    border-radius: 8px; /* 角を丸くする */
-    
-    cursor: pointer; /* マウスを乗せたら指カーソルにする */
-    
-    /* アニメーションを滑らかにする（おまけ） */
-    transition: background-color 0.2s, transform 0.1s;
-}
+/* --- カテゴリーボタンの色 --- */
+.category-btn[data-category="A"] { background-color: #007bff; } /* 青 */
+.category-btn[data-category="A"]:hover:enabled { background-color: #0056b3; }
 
-/* --- ホームに戻るボタン --- */
-#home-btn {
-    width: 85%;
-    padding: 10px;
-    font-size: 1rem;
-    color: #555;
-    background-color: #f4f4f9; /* 目立たない色 */
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 25px; /* 結果とのすき間 */
-}
-#home-btn:hover {
-    background-color: #e9e9e9;
-}
+.category-btn[data-category="B"] { background-color: #28a745; } /* 緑 */
+.category-btn[data-category="B"]:hover:enabled { background-color: #218838; }
 
-/* --- マウスが乗った時のスタイル (ホバー) --- */
-#choices button:hover {
-    background-color: #f4f4f9; /* 背景をうすいグレーに */
-    border-color: #007bff; /* 枠線を青くする */
-}
+.category-btn[data-category="C"] { background-color: #dc3545; } /* 赤 */
+.category-btn[data-category="C"]:hover:enabled { background-color: #c82333; }
 
-/* --- クリックした瞬間のスタイル (アクティブ) --- */
-#choices button:active {
-    transform: scale(0.99); /* ほんの少し(99%)小さくする */
-    background-color: #e9e9e9; /* 少し濃いグレー */
-}
+/* --- 「熟語」ボタンの色 --- */
+.level-btn[data-level="10"] { background-color: #ffc107; color: #212529; } /* 黄（文字は黒で読みやすく） */
+.level-btn[data-level="10"]:hover:enabled { background-color: #e0a800; }
 
-/* --- 答え合わせで無効化された時のスタイル --- */
-#choices button:disabled {
-    background-color: #eee;
-    color: #aaa;
-    cursor: not-allowed; /* 禁止カーソル */
-    border-color: #ddd;
-}
+/* --- 品詞ボタンの色 --- */
+.level-btn[data-level-base="1"] { background-color: #007bff; } /* 動詞 */
+.level-btn[data-level-base="1"]:hover:enabled { background-color: #0056b3; }
 
-.container {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    padding: 24px;
-    width: 320px;
-    text-align: center;
-}
+.level-btn[data-level-base="2"] { background-color: #28a745; } /* 名詞 */
+.level-btn[data-level-base="2"]:hover:enabled { background-color: #218838; }
 
-/* --- ★ モード選択ボタンのスタイル (新規追加) --- */
+.level-btn[data-level-base="3"] { background-color: #dc3545; } /* 形容詞/副詞 */
+.level-btn[data-level-base="3"]:hover:enabled { background-color: #c82333; }
+
+/* --- 間違えた単語の復習ボタン --- */
+.review-btn { background-color: #fd7e14; } /* オレンジ */
+.review-btn:hover:enabled { background-color: #e36d0e; }
+
+/* --- 出題方向の切り替え --- */
 #mode-selection {
     display: flex; /* 2つのボタンを横並びにする */
     margin-bottom: 25px;
-    border: 1px solid #007bff; /* 枠線（青） */
+    border: 1px solid #007bff;
     border-radius: 8px;
     overflow: hidden; /* 角丸を効かせるため */
 }
@@ -192,88 +105,104 @@ body {
     padding: 10px;
     font-size: 0.9rem;
     font-weight: 500;
-    
-    background-color: #fff; /* 通常（非選択）の色 */
-    color: #007bff; /* 通常（非選択）の文字色 */
-    
+    background-color: #fff;
+    color: #007bff;
     border: none;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
 }
 
 .mode-btn:hover {
-    background-color: #f4f4f9; /* 少し色をつける */
+    background-color: #f4f4f9;
 }
 
-/* ★ 選択中のスタイル (activeクラス) */
 .mode-btn.active {
-    background-color: #007bff; /* 選択中の背景色（青） */
-    color: #fff; /* 選択中の文字色（白） */
+    background-color: #007bff;
+    color: #fff;
 }
 
-/* ★ ボタン間の区切り線 (2つ目以降のボタンの左側) */
 .mode-btn + .mode-btn {
-    border-left: 1px solid #007bff;
+    border-left: 1px solid #007bff; /* ボタン間の区切り線 */
 }
 
 /* --- スコアカウンター --- */
 #score-counter {
-    text-align: right; /* 右寄せ */
-    font-size: 0.9rem; /* 文字を少し小さく */
-    color: #555;       /* 文字色を少し薄く */
+    font-size: 0.9rem;
+    color: #555;
     margin-bottom: 15px;
-    border-bottom: 1px solid #eee; /* 薄い区切り線 */
+    border-bottom: 1px solid #eee;
     padding-bottom: 8px;
     text-align: center;
 }
+
 #score-counter span {
-    font-weight: bold; /* 数字部分を太字に */
+    font-weight: bold;
     color: #333;
-    /* 数字が見やすいように少し幅を確保 */
     display: inline-block;
-    min-width: 1.2em; 
+    min-width: 1.2em; /* 数字が変わっても幅がぶれないように */
     text-align: center;
 }
 
+/* --- 問題文 --- */
 #question {
-    font-size: 2.5rem; /* 2.5倍の文字サイズ */
+    font-size: 2.5rem;
     font-weight: 600;
     margin-bottom: 20px;
-    color: #0056b3; /* 少し濃い青 */
+    color: #0056b3;
     text-align: center;
+    overflow-wrap: anywhere; /* 長い単語でも枠からはみ出さないように */
 }
 
-#answer-input {
-    width: 80%;
-    padding: 10px;
+/* 日本語 → 英語のとき（訳は長いので小さめにする） */
+#question.question-jp {
+    font-size: 1.5rem;
+    line-height: 1.5;
+}
+
+/* --- 選択肢 --- */
+#choices {
+    display: flex;
+    flex-direction: column; /* ボタンを縦に並べる */
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#choices button {
+    width: 100%;
+    padding: 12px;
     font-size: 1rem;
+    color: #333;
+    background-color: #fff;
     border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-#check-btn {
-    width: 85%;
-    padding: 10px;
-    font-size: 1rem;
-    color: #fff;
-    background-color: #007bff; /* 青色 */
-    border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-    margin-top: 15px;
+    transition: background-color 0.2s, transform 0.1s;
 }
 
-#check-btn:hover {
-    background-color: #0056b3;
+#choices button:hover {
+    background-color: #f4f4f9;
+    border-color: #007bff;
 }
 
+#choices button:active {
+    transform: scale(0.99);
+    background-color: #e9e9e9;
+}
+
+#choices button:disabled {
+    background-color: #eee;
+    color: #aaa;
+    cursor: not-allowed;
+    border-color: #ddd;
+}
+
+/* --- 結果表示 --- */
 #result {
     margin-top: 20px;
     font-size: 1.1rem;
     font-weight: 500;
 }
 
-/* JavaScriptから追加するクラス */
 .correct {
     color: green;
 }
@@ -282,7 +211,8 @@ body {
     color: red;
 }
 
-/* --- 「戻る」ボタンのスタイル (新規追加) --- */
+/* --- 「ホームに戻る」「レベル選択に戻る」ボタン --- */
+#home-btn,
 #back-btn {
     width: 100%;
     padding: 10px;
@@ -292,8 +222,17 @@ body {
     border: 1px solid #ccc;
     border-radius: 8px;
     cursor: pointer;
-    margin-top: 10px; /* 上のボタンとのすき間 */
 }
+
+#home-btn {
+    margin-top: 25px;
+}
+
+#back-btn {
+    margin-top: 10px;
+}
+
+#home-btn:hover,
 #back-btn:hover {
     background-color: #e9e9e9;
 }
